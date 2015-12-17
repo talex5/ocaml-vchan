@@ -250,7 +250,10 @@ let send_notify (vch: t) rdwr =
   let prev =
     (* clear the bit and return previous value *)
     atomic_fetch_and vch.shared_page.buffer idx (lnot bit) in
-  if prev land bit <> 0 then E.send vch.evtchn
+  if prev land bit <> 0 then (
+    MProf.Trace.label @@ "vchan:send_notify:" ^ (match rdwr with Read -> "read" | Write -> "write");
+    E.send vch.evtchn
+  )
 
 let fast_get_data_ready (vch: t) request =
   let ready = Int32.(rd_prod vch - rd_cons vch |> to_int) in
@@ -274,6 +277,7 @@ let buffer_space (vch: t) =
   wr_ring_size vch - Int32.(wr_prod vch - wr_cons vch |> to_int)
 
 let state vch =
+  (* XXX: delay getting state until we know whether we're client or server? *)
   let client_state =
     match state_of_live (get_vchan_interface_cli_live vch.shared_page)
     with Ok st -> st | _ -> raise (Invalid_argument "cli_live")
@@ -498,6 +502,7 @@ let client ~domid ~port () =
   Lwt.return { remote_port; remote_domid; shared_page=v; role; read=r_buf; write=w_buf; evtchn; token=E.initial; ack_up_to }
 
 let close (vch: t) =
+  MProf.Trace.label "vchan:close";
   match vch.role with
   | Client { shr_map; read_map; write_map } ->
     set_vchan_interface_cli_live vch.shared_page (live_of_state Exited);

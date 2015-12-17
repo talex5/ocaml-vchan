@@ -1,9 +1,9 @@
 # OASIS_START
-# DO NOT EDIT (digest: 6508f39a6e8df69a27aa4d2b9805e61c)
+# DO NOT EDIT (digest: eaddfe0a1673da235f0f78e7235ce353)
 version = "2.0.3"
 description = "Xen libvchan protocol implementation"
 requires =
-"lwt cstruct io-page cstruct.syntax mirage-types mirage-types.lwt xenstore.client sexplib sexplib.syntax"
+"lwt cstruct io-page cstruct.syntax mirage-types mirage-types.lwt xenstore.client sexplib sexplib.syntax mirage-profile"
 archive(byte) = "vchan.cma"
 archive(byte, plugin) = "vchan.cma"
 archive(native) = "vchan.cmxa"
