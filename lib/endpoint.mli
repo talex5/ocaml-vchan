@@ -17,4 +17,5 @@
 
 (** Client and server interface for Xen's vchan protocol. *)
 
+exception Debug of Cstruct.t
 module Make(A : S.EVENTS)(M: S.MEMORY)(C: S.CONFIGURATION) : S.ENDPOINT with type port = Port.t

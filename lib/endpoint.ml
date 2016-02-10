@@ -17,6 +17,8 @@ open S
 open Sexplib.Std
 open Lwt
 
+exception Debug of Cstruct.t
+
 external (|>) : 'a -> ('a -> 'b) -> 'b = "%revapply";;
 external ( $ ) : ('a -> 'b) -> 'a -> 'b = "%apply"
 
@@ -445,13 +447,14 @@ let (>>|=) m f = match m with
 | `Ok x -> f x
 | `Error m -> fail (Failure m)
 
+
 let try_of_order tag fn v =
   match Location.of_order (fn v) with
   | `Ok x -> return x
   | `Error m ->
       Printf.printf "try_of_order: %s: %s" tag m;
       Cstruct.hexdump v;
-      fail (Failure m)
+      fail (Debug v)
 
 let client ~domid ~port () =
   C.read ~server_domid:domid ~port
