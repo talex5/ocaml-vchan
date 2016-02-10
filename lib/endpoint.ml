@@ -445,6 +445,14 @@ let (>>|=) m f = match m with
 | `Ok x -> f x
 | `Error m -> fail (Failure m)
 
+let try_of_order tag fn v =
+  match Location.of_order (fn v) with
+  | `Ok x -> return x
+  | `Error m ->
+      Printf.printf "try_of_order: %s: %s" tag m;
+      Cstruct.hexdump v;
+      fail (Failure m)
+
 let client ~domid ~port () =
   C.read ~server_domid:domid ~port
   >>= fun { C.ring_ref = gntref; event_channel = evtchn } ->
@@ -455,10 +463,8 @@ let client ~domid ~port () =
   let mapping = M.map ~domid ~grant:(M.grant_of_int32 (Int32.of_string gntref)) ~rw:true in
   let v = Io_page.to_cstruct (M.buf_of_mapping mapping) in
 
-  Location.of_order (get_lo v)
-  >>|= fun lo ->
-  Location.of_order (get_ro v)
-  >>|= fun ro ->
+  try_of_order "get_lo" get_lo v >>= fun lo ->
+  try_of_order "get_ro" get_ro v >>= fun ro ->
   let nb_left_pages = Location.to_length lo / 4096 in
   let nb_right_pages = Location.to_length ro / 4096 in
   
