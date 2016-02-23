@@ -17,6 +17,9 @@ open S
 open Sexplib.Std
 open Lwt
 
+let src = Logs.Src.create "vchan.endpoint" ~doc:"VChan endpoint"
+module Log = (val Logs.src_log src : Logs.LOG)
+
 exception Debug of Cstruct.t
 
 external (|>) : 'a -> ('a -> 'b) -> 'b = "%revapply";;
@@ -457,8 +460,13 @@ let try_of_order tag fn v =
       fail (Debug v)
 
 let client ~domid ~port () =
+  Log.info (fun f -> f "client ~domid:%d ~port:%s" domid (sexp_of_port port |> Sexplib.Sexp.to_string));
   C.read ~server_domid:domid ~port
   >>= fun { C.ring_ref = gntref; event_channel = evtchn } ->
+  Log.info (fun f -> f "connected %d:%s with ring_ref=%s and evtchn=%s"
+    domid (sexp_of_port port |> Sexplib.Sexp.to_string)
+    gntref evtchn
+  );
   E.port_of_string evtchn
   >>|= fun unbound_port ->
  
